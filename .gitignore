@@ -1,0 +1,22 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+
+# Dati e log pesanti
+*.mp4
+*.avi
+*.bag
+datasets/
+*.log
+
+# Modelli pre-addestrati (usare Git LFS o link esterno se serve versionarli)
+*.pt
+*.onnx
+*.engine
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

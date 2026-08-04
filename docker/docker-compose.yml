@@ -1,0 +1,22 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: rover_mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  # Aggiungere qui i servizi dei singoli moduli man mano che sono pronti:
+  # ai_detection:
+  #   build: ../ai_detection
+  #   depends_on: [mosquitto]
+  #
+  # mqtt_ros_bridge:
+  #   build: ../mqtt_ros_bridge
+  #   depends_on: [mosquitto]
+  #
+  # streaming_stt:
+  #   build: ../streaming_stt
+  #   depends_on: [mosquitto]
