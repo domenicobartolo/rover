@@ -8,13 +8,15 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
 
-  # Aggiungere qui i servizi dei singoli moduli man mano che sono pronti:
+  mqtt_ros_bridge:
+    build: ../mqtt_ros_bridge
+    container_name: rover_mqtt_ros_bridge
+    depends_on:
+      - mosquitto
+
+  # Aggiungere qui gli altri servizi man mano che sono pronti:
   # ai_detection:
   #   build: ../ai_detection
-  #   depends_on: [mosquitto]
-  #
-  # mqtt_ros_bridge:
-  #   build: ../mqtt_ros_bridge
   #   depends_on: [mosquitto]
   #
   # streaming_stt:
