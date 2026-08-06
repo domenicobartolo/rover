@@ -1,0 +1,21 @@
+services:
+  streaming-stt:
+    build: .
+    container_name: streaming_stt
+    ports:
+      - "8765:8765"
+    environment:
+      - WHISPER_MODEL=small
+      - WHISPER_DEVICE=cpu
+      - WHISPER_COMPUTE_TYPE=int8
+      - WHISPER_LANGUAGE=it
+    restart: unless-stopped
+    # Se in futuro vuoi passare a GPU NVIDIA, decommenta e installa nvidia-container-toolkit:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    # e imposta WHISPER_DEVICE=cuda, WHISPER_COMPUTE_TYPE=float16
