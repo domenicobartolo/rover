@@ -17,6 +17,6 @@ services:
   #   build: ../mqtt_ros_bridge
   #   depends_on: [mosquitto]
   #
-  # streaming_stt:
-  #   build: ../streaming_stt
-  #   depends_on: [mosquitto]
+  streaming_stt:
+    build: ../streaming_stt
+    depends_on: [mosquitto]
