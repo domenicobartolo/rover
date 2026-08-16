@@ -7,8 +7,9 @@ si costruisca e comunichi correttamente col broker MQTT.
 import json
 import time
 import paho.mqtt.client as mqtt
+import os
 
-BROKER_HOST = "mosquitto"  # nome del servizio nel docker-compose, non "localhost"
+BROKER_HOST = os.environ.get("MQTT_BROKER_HOST", "localhost")  # nome del servizio nel docker-compose, non "localhost"
 BROKER_PORT = 1883
 TOPIC = "percezione/detection"
 
