@@ -10,22 +10,24 @@ Le metriche vengono:
   - pubblicate su MQTT sul topic rete/metriche (schema del contratto)
   - salvate in logs/streaming_metrics.csv per la relazione tecnica
 
-Nota sul RTT: essendo un flusso video mono-direzionale (solo RTP, senza
-RTCP di ritorno), questo script NON misura il RTT. Per quello, in
-parallelo, usate un test attivo separato (es. `ping` o `iperf3`) verso
-lo stesso host — indicato nei comandi di verifica in fondo al file.
+Il RTT viene misurato automaticamente in un thread separato con burst
+periodici di `ping` verso --ping-host (default 127.0.0.1). In
+laboratorio, punta --ping-host all'IP reale del sender/rover.
 
 Uso:
-    python streaming_receiver.py                     # riceve su porta 5000, nessun display
-    python streaming_receiver.py --display            # mostra anche il video (richiede ambiente grafico)
-    python streaming_receiver.py --mqtt-host localhost
+    python streaming_receiver.py                              # riceve su porta 5000, nessun display
+    python streaming_receiver.py --display                     # mostra anche il video (richiede ambiente grafico)
+    python streaming_receiver.py --mqtt-host localhost --ping-host 192.168.1.50
 """
 
 import argparse
 import csv
 import json
 import os
+import re
+import subprocess
 import sys
+import threading
 import time
 from datetime import datetime
 
@@ -38,6 +40,39 @@ from gi.repository import GLib, Gst  # noqa: E402
 TOPIC_METRICS = "rete/metriche"
 LOG_DIR = "logs"
 LOG_FILE = os.path.join(LOG_DIR, "streaming_metrics.csv")
+
+RTT_PATTERN = re.compile(r"rtt min/avg/max/mdev = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+) ms")
+
+
+def ping_worker(host: str, interval: float, state: dict) -> None:
+    """
+    Esegue periodicamente un piccolo burst di ping verso `host` in un
+    thread separato (non blocca il loop principale di GStreamer/MQTT)
+    e aggiorna `state` con il RTT medio piu' recente.
+    """
+    while not state.get("stop"):
+        try:
+            result = subprocess.run(
+                ["ping", "-c", "3", "-W", "1", host],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            match = RTT_PATTERN.search(result.stdout)
+            if match:
+                state["rtt_min_ms"] = float(match.group(1))
+                state["rtt_avg_ms"] = float(match.group(2))
+                state["rtt_max_ms"] = float(match.group(3))
+            else:
+                state["rtt_min_ms"] = None
+                state["rtt_avg_ms"] = None
+                state["rtt_max_ms"] = None
+        except Exception as exc:
+            print(f"[PING][WARN] Impossibile misurare il RTT verso {host}: {exc}")
+            state["rtt_min_ms"] = None
+            state["rtt_avg_ms"] = None
+            state["rtt_max_ms"] = None
+        time.sleep(interval)
 
 
 def build_pipeline(args) -> Gst.Pipeline:
@@ -79,6 +114,18 @@ def main():
         choices=["edge", "remote_5g_private", "remote_5g_commercial", "local_test"],
         help="Etichetta del setting sperimentale corrente, per confrontare i risultati",
     )
+    parser.add_argument(
+        "--ping-host",
+        type=str,
+        default="127.0.0.1",
+        help="Host verso cui misurare il RTT (di solito l'host del sender/rover)",
+    )
+    parser.add_argument(
+        "--ping-interval",
+        type=float,
+        default=5.0,
+        help="Secondi tra un burst di ping e il successivo",
+    )
     args = parser.parse_args()
 
     Gst.init(None)
@@ -88,6 +135,13 @@ def main():
     mqtt_client = mqtt.Client()
     mqtt_client.connect(args.mqtt_host, args.mqtt_port, keepalive=60)
     mqtt_client.loop_start()
+
+    ping_state = {"stop": False, "rtt_min_ms": None, "rtt_avg_ms": None, "rtt_max_ms": None}
+    ping_thread = threading.Thread(
+        target=ping_worker, args=(args.ping_host, args.ping_interval, ping_state), daemon=True
+    )
+    ping_thread.start()
+    print(f"[PING] Misurazione RTT avviata verso {args.ping_host} ogni {args.ping_interval}s")
 
     stats_state = {"bytes_since_last": 0, "last_time": time.time()}
 
@@ -133,11 +187,15 @@ def main():
             "packets_lost": packets_lost,
             "packets_received": packets_received,
             "packet_loss_pct": loss_pct,
+            "rtt_min_ms": ping_state.get("rtt_min_ms"),
+            "rtt_avg_ms": ping_state.get("rtt_avg_ms"),
+            "rtt_max_ms": ping_state.get("rtt_max_ms"),
         }
 
         print(
             f"[METRICHE] bitrate={bitrate_kbps}kbps  jitter={jitter_ms}ms  "
-            f"persi={packets_lost}  ricevuti={packets_received}  loss={loss_pct}%"
+            f"persi={packets_lost}  ricevuti={packets_received}  loss={loss_pct}%  "
+            f"rtt_avg={ping_state.get('rtt_avg_ms')}ms"
         )
 
         mqtt_message = {
@@ -146,6 +204,7 @@ def main():
             "bitrate_kbps": bitrate_kbps,
             "jitter_ms": jitter_ms,
             "packet_loss_pct": loss_pct,
+            "rtt_avg_ms": ping_state.get("rtt_avg_ms"),
         }
         mqtt_client.publish(TOPIC_METRICS, json.dumps(mqtt_message))
         log_metrics_csv(row)
@@ -171,16 +230,13 @@ def main():
 
     pipeline.set_state(Gst.State.PLAYING)
     print(f"[RECEIVER] In ascolto su porta {args.port}, setting='{args.setting}' (Ctrl+C per fermare)")
-    print(
-        "[RECEIVER][NOTA] Per il RTT, esegui in parallelo: "
-        "ping -c 20 <host_sender>  oppure  iperf3 -c <host_sender>"
-    )
 
     try:
         loop.run()
     except KeyboardInterrupt:
         print("\n[RECEIVER] Interrotto dall'utente.")
     finally:
+        ping_state["stop"] = True
         mqtt_client.loop_stop()
         mqtt_client.disconnect()
         pipeline.set_state(Gst.State.NULL)
