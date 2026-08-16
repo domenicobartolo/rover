@@ -20,3 +20,5 @@ datasets/
 .DS_Store
 .vscode/
 .idea/
+results/
+runs/
