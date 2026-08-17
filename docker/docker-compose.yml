@@ -13,6 +13,8 @@ services:
     container_name: rover_ai_detection
     depends_on:
       - mosquitto
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
 
   # Aggiungere qui gli altri servizi man mano che sono pronti:
   # mqtt_ros_bridge:
