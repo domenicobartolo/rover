@@ -1,8 +1,7 @@
 # Contratto di interfaccia tra i moduli
 
 Questo documento definisce topic MQTT, schemi dei messaggi e vocabolario comandi
-condivisi tra i tre moduli. Va aggiornato via pull request quando cambia qualcosa,
-mai in modo unilaterale.
+condivisi tra i tre moduli. 
 
 ## Topic MQTT
 
