@@ -72,14 +72,4 @@ condivisi tra i tre moduli.
 Qualsiasi comando fuori da questo insieme (incluso output di un eventuale LLM) va
 scartato dal bridge (`validated: false`, con `rejection_reason` valorizzato).
 
-## Sincronizzazione temporale
 
-Tutti i timestamp sono Unix epoch in secondi (float). Per confrontare le misure
-end-to-end tra i tre moduli, usare la stessa fonte oraria (NTP o stesso host di
-riferimento durante i test in laboratorio).
-
-## Storico modifiche
-
-| Data | Modifica | Autore |
-|---|---|---|
-| — | Versione iniziale del contratto | Gruppo 4 |
