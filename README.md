@@ -29,7 +29,6 @@ mqtt_ros_bridge/     Bridge MQTT <-> ROS 2, validazione e sicurezza comandi (Ant
 streaming_stt/       Streaming video 5G + speech-to-text + interpretazione comando (Gregorio)
 docs/
   interface_contract.md   Schema messaggi, topic e vocabolario comandi condiviso
-  updates/                 Aggiornamenti periodici (uno per data)
 docker/
   docker-compose.yml       Broker MQTT locale + servizi di sviluppo
 ```
@@ -55,7 +54,7 @@ schema descritto in [`docs/interface_contract.md`](docs/interface_contract.md).
 ## Consegne richieste
 
 - Relazione tecnica (~30 pagine)
-- Repository Git con README (questo)
+- Repository Git con README 
 - Presentazione (max 15 slide)
-- Dataset/log
-- Aggiornamenti intermedi periodici (vedi `docs/updates/`)
+
+
