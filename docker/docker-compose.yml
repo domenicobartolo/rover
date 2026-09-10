@@ -18,11 +18,11 @@ services:
     environment:
       - MQTT_BROKER_HOST=localhost
 
-  # Aggiungere qui gli altri servizi man mano che sono pronti:
-  # mqtt_ros_bridge:
-  #   build: ../mqtt_ros_bridge
-  #   depends_on: [mosquitto]
-  #
+  mqtt_ros_bridge:
+    build: ../mqtt_ros_bridge
+    container_name: rover_mqtt_ros_bridge
+    depends_on:
+      - mosquitto
   streaming_stt:
     build: ../streaming_stt
     container_name: rover_streaming_stt
