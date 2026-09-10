@@ -11,8 +11,8 @@ services:
   ai_detection:
     build: ../ai_detection
     container_name: rover_ai_detection
-    network_mode:host
-    runtime:nvidia
+    network_mode: host
+    runtime: nvidia
     depends_on:
       - mosquitto
     environment:
@@ -23,7 +23,9 @@ services:
     container_name: rover_mqtt_ros_bridge
     depends_on:
       - mosquitto
+
   streaming_stt:
     build: ../streaming_stt
     container_name: rover_streaming_stt
-    depends_on: [mosquitto]
+    depends_on:
+      - mosquitto
