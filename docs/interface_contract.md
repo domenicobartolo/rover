@@ -1,8 +1,7 @@
 # Contratto di interfaccia tra i moduli
 
 Questo documento definisce topic MQTT, schemi dei messaggi e vocabolario comandi
-condivisi tra i tre moduli. Va aggiornato via pull request quando cambia qualcosa,
-mai in modo unilaterale.
+condivisi tra i tre moduli. 
 
 ## Topic MQTT
 
@@ -74,13 +73,8 @@ Qualsiasi comando fuori da questo insieme (incluso output di un eventuale LLM) v
 scartato dal bridge (`validated: false`, con `rejection_reason` valorizzato).
 
 ## Sincronizzazione temporale
-
 Tutti i timestamp sono Unix epoch in secondi (float). Per confrontare le misure
 end-to-end tra i tre moduli, usare la stessa fonte oraria (NTP o stesso host di
 riferimento durante i test in laboratorio).
 
-## Storico modifiche
 
-| Data | Modifica | Autore |
-|---|---|---|
-| — | Versione iniziale del contratto | Gruppo 4 |
