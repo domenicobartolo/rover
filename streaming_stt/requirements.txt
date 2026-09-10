@@ -1,0 +1,4 @@
+openai-whisper>=20231117
+paho-mqtt>=2.0
+sounddevice>=0.5
+numpy>=1.24,<2
