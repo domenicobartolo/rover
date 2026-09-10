@@ -8,17 +8,24 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
 
+  ai_detection:
+    build: ../ai_detection
+    container_name: rover_ai_detection
+    network_mode: host
+    runtime: nvidia
+    depends_on:
+      - mosquitto
+    environment:
+      - MQTT_BROKER_HOST=localhost
+
   mqtt_ros_bridge:
     build: ../mqtt_ros_bridge
     container_name: rover_mqtt_ros_bridge
     depends_on:
       - mosquitto
 
-  # Aggiungere qui gli altri servizi man mano che sono pronti:
-  # ai_detection:
-  #   build: ../ai_detection
-  #   depends_on: [mosquitto]
-  #
-  # streaming_stt:
-  #   build: ../streaming_stt
-  #   depends_on: [mosquitto]
+  streaming_stt:
+    build: ../streaming_stt
+    container_name: rover_streaming_stt
+    depends_on:
+      - mosquitto
