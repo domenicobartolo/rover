@@ -1,41 +1,46 @@
 """
-Publisher MQTT con human detection reale (YOLOv8n) e stima distanza.
-Pubblica su percezione/detection secondo lo schema in
-docs/interface_contract.md.
+Publisher MQTT con human detection (YOLOv8n) tramite mosquitto_pub di sistema.
 """
 import os
 import json
 import time
+import subprocess
 import cv2
-import paho.mqtt.client as mqtt
 from ultralytics import YOLO
 from distance_estimator import estimate_distance
 
-# Configurazione broker: "localhost" in sviluppo locale,
-# "mosquitto" quando eseguito dentro il container Docker (vedi docker-compose.yml)
 BROKER_HOST = os.environ.get("MQTT_BROKER_HOST", "localhost")
-BROKER_PORT = 1883
+BROKER_PORT = os.environ.get("MQTT_BROKER_PORT", "1883")
 TOPIC = "percezione/detection"
-
-# "edge" = detection a bordo (questo script); cambiare se eseguito da remoto
 SETTING = os.environ.get("DETECTION_SETTING", "edge")
-
 PERSON_CLASS_ID = 0
 
 model = YOLO("yolov8n.pt")
 
 
-def main():
-    client = mqtt.Client()
-    client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
-    print(f"Connesso al broker MQTT {BROKER_HOST}:{BROKER_PORT}")
+def send_mqtt_message(topic, message_dict):
+    """Invia il messaggio usando il comando mosquitto_pub di sistema."""
+    payload = json.dumps(message_dict)
+    cmd = [
+        "mosquitto_pub",
+        "-h", BROKER_HOST,
+        "-p", str(BROKER_PORT),
+        "-t", topic,
+        "-m", payload
+    ]
+    try:
+        subprocess.run(cmd, check=True)
+    except Exception as e:
+        print(f"Errore durante l'invio con mosquitto_pub: {e}")
 
+
+def main():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Errore: impossibile accedere alla webcam")
         return
-    print("Detection avviata, pubblicazione su MQTT. Premi Ctrl+C per uscire.")
 
+    print(f"Detection avviata. Invio dati a Mosquitto ({BROKER_HOST}:{BROKER_PORT})...")
     frame_id = 0
 
     try:
@@ -58,10 +63,10 @@ def main():
                         distance = estimate_distance(bbox_height)
 
                         detections.append({
-                            "bbox": [x1, y1, x2 - x1, y2 - y1],  # formato [x, y, w, h] come da contratto
+                            "bbox": [x1, y1, x2 - x1, y2 - y1],
                             "confidence": round(confidence, 3),
                             "distance_m": distance,
-                            "track_id": None,  # tracking non ancora implementato
+                            "track_id": None,
                         })
 
             message = {
@@ -73,17 +78,17 @@ def main():
                 "inference_time_ms": round(inference_time_ms, 2),
             }
 
-            client.publish(TOPIC, json.dumps(message))
-            print(f"Frame {frame_id}: {len(detections)} persona/e rilevata/e, "
-                  f"inferenza {inference_time_ms:.1f}ms")
-
+            # Invia tramite il comando mosquitto_pub
+            send_mqtt_message(TOPIC, message)
+            
+            print(f"Frame {frame_id}: {len(detections)} persona/e | {inference_time_ms:.1f}ms")
             frame_id += 1
+            time.sleep(0.05)
 
     except KeyboardInterrupt:
-        print("\nInterrotto dall'utente")
+        print("\nInterrotto")
     finally:
         cap.release()
-        client.disconnect()
 
 
 if __name__ == "__main__":
