@@ -9,8 +9,8 @@ import json
 import time
 import paho.mqtt.client as mqtt
 
-BROKER_HOST = "broker.hivemq.com"
-BROKER_PORT = 1883
+BROKER_HOST = os.environ.get("MQTT_BROKER_HOST", "localhost") 
+BROKER_PORT = int(os.environ.get("MQTT_BROKER_PORT", 1883))
 
 PREFIX = "rover-gruppo4-domenico-test"
 
