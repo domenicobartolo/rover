@@ -10,7 +10,7 @@ import os
 import time
 import paho.mqtt.client as mqtt
 
-BROKER_HOST = os.environ.get("MQTT_BROKER_HOST", "broker.hivemq.com")
+BROKER_HOST = os.environ.get("MQTT_BROKER_HOST", "mosquitto")
 BROKER_PORT = int(os.environ.get("MQTT_BROKER_PORT", 1883))
 
 PREFIX = "rover-gruppo4-domenico-test"
@@ -131,5 +131,31 @@ def valida_comando(payload):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
+import time as time_module
+
+print("Attendo 10 secondi prima del primo tentativo di connessione...")
+time_module.sleep(10)
+
+max_tentativi = 15
+for tentativo in range(1, max_tentativi + 1):
+    try:
+        client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
+        break
+    except (ConnectionRefusedError, OSError) as e:
+        print(f"Connessione fallita ({e}) - tentativo {tentativo}/{max_tentativi}, riprovo tra 3 secondi...")
+        time_module.sleep(60)
+else:
+    print("Impossibile connettersi al broker dopo diversi tentativi, esco.")
+    exit(1)
+for tentativo in range(1, max_tentativi + 1):
+    try:
+        client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
+        break
+    except ConnectionRefusedError:
+        print(f"Connessione rifiutata (tentativo {tentativo}/{max_tentativi}), riprovo tra 2 secondi...")
+        time_module.sleep(2)
+else:
+    print("Impossibile connettersi al broker dopo diversi tentativi, esco.")
+    exit(1)
+
 client.loop_forever()
