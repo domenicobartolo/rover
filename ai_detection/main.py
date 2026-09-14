@@ -30,7 +30,7 @@ def main():
     client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
     print(f"Connesso al broker MQTT {BROKER_HOST}:{BROKER_PORT}")
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(4)
     if not cap.isOpened():
         print("Errore: impossibile accedere alla webcam")
         return
