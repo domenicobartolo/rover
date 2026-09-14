@@ -69,8 +69,7 @@ condivisi tra i tre moduli.
 | `fermati` | — | sempre eseguibile, priorità massima |
 | `mantieni_distanza` | `target_distance_m` | — |
 
-Qualsiasi comando fuori da questo insieme (incluso output di un eventuale LLM) va
-scartato dal bridge (`validated: false`, con `rejection_reason` valorizzato).
+Qualsiasi comando fuori da questo insieme va scartato dal bridge (`validated: false`, con `rejection_reason` valorizzato).
 
 ## Sincronizzazione temporale
 Tutti i timestamp sono Unix epoch in secondi (float). Per confrontare le misure
