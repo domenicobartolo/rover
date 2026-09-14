@@ -11,7 +11,7 @@ model = YOLO("yolov8n.pt")
 PERSON_CLASS_ID=0
 
 def main():
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(4)
 
     if not cap.isOpened():
         print ("Errore apertura webcam")
