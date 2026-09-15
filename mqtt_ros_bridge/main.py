@@ -13,11 +13,10 @@ import paho.mqtt.client as mqtt
 BROKER_HOST = os.environ.get("MQTT_BROKER_HOST", "mosquitto")
 BROKER_PORT = int(os.environ.get("MQTT_BROKER_PORT", 1883))
 
-PREFIX = "rover-gruppo4-domenico-test"
 
-TOPIC_DETECTION = f"{PREFIX}/percezione/detection"
-TOPIC_COMMAND = f"{PREFIX}/comando/interpretato"
-TOPIC_VALIDATED = f"{PREFIX}/rover/comando_validato"
+TOPIC_DETECTION = "percezione/detection"
+TOPIC_COMMAND = "comando/interpretato"
+TOPIC_VALIDATED = "rover/comando_validato"
 
 COMANDI_VALIDI = {"avvicinati", "allontanati", "fermati", "mantieni_distanza"}
 DISTANZA_MINIMA_SICUREZZA_M = 0.5
